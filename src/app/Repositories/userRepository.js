@@ -1,127 +1,120 @@
-// This will act as a User Repository for MySQL
-const db = require('../../database/connection.js');
+const BaseRepository = require('./baseRepository.js');
 
-class UserRepository {
+class UserRepository extends BaseRepository {
   constructor() {
-    this.db = db;
+    super();
   }
 
-  async createUser(userData) {
-    const { name, email, password_hash, role, is_verified } = userData;
-
+  // Create new user
+  async create(userData) {
     const query = `
-      INSERT INTO users (name, email, password_hash, role, is_verified)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO users (name, email, password_hash, role, is_verified, otp_code, otp_expires_at, otp_type)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    const [result] = await this.db.execute(query, [
-      name,
-      email,
-      password_hash,
-      role,
-      is_verified,
-    ]);
+    const params = [
+      userData.name,
+      userData.email,
+      userData.password_hash,
+      userData.role || 'user',
+      userData.is_verified || false,
+      userData.otp_code || null,
+      userData.otp_expires_at || null,
+      userData.otp_type || null
+    ];
 
-    // Return the created user
-    return await this.getUserById(result.insertId);
+    return await this.executeInsert(query, params);
   }
 
-  async getUserById(userId) {
-    const query = `SELECT * FROM users WHERE id = ?`;
-    const [rows] = await this.db.execute(query, [userId]);
-
-    return rows.length > 0 ? rows[0] : null;
+  // Find user by email
+  async findByEmail(email) {
+    const query = 'SELECT * FROM users WHERE email = ?';
+    return await this.executeOne(query, [email]);
   }
 
-  async getUserByEmail(email) {
-    const query = `SELECT * FROM users WHERE email = ?`;
-    const [rows] = await this.db.execute(query, [email]);
-
-    return rows.length > 0 ? rows[0] : null;
+  // Find user by ID
+  async findById(id) {
+    const query = 'SELECT * FROM users WHERE id = ?';
+    return await this.executeOne(query, [id]);
   }
 
-  async getUserByUsername(username) {
-    const query = `SELECT * FROM users WHERE username = ?`;
-    const [rows] = await this.db.execute(query, [username]);
+  // Update user OTP
+  async updateOTP(userId, otpCode, otpExpiresAt, otpType) {
+    const query = `
+      UPDATE users 
+      SET otp_code = ?, otp_expires_at = ?, otp_type = ?
+      WHERE id = ?
+    `;
 
-    return rows.length > 0 ? rows[0] : null;
+    await this.execute(query, [otpCode, otpExpiresAt, otpType, userId]);
+    return true;
   }
 
-  async updateUser(userId, updateData) {
-    // Build dynamic UPDATE query
-    const fields = Object.keys(updateData);
-    const values = Object.values(updateData);
+  // Verify user email
+  async verifyUser(email) {
+    const query = `
+      UPDATE users 
+      SET is_verified = true, otp_code = NULL, otp_expires_at = NULL, otp_type = NULL
+      WHERE email = ?
+    `;
+
+    await this.execute(query, [email]);
+    return true;
+  }
+
+  // Update user password
+  async updatePassword(email, passwordHash) {
+    const query = `
+      UPDATE users 
+      SET password_hash = ?, otp_code = NULL, otp_expires_at = NULL, otp_type = NULL
+      WHERE email = ?
+    `;
+
+    await this.execute(query, [passwordHash, email]);
+    return true;
+  }
+
+  // Update user profile
+  async updateProfile(userId, updates) {
+    const fields = [];
+    const values = [];
+
+    Object.keys(updates).forEach((key) => {
+      if (updates[key] !== undefined) {
+        fields.push(`${key} = ?`);
+        values.push(updates[key]);
+      }
+    });
 
     if (fields.length === 0) {
       throw new Error('No fields to update');
     }
 
-    const setClause = fields.map((field) => `${field} = ?`).join(', ');
-    const query = `UPDATE users SET ${setClause} WHERE id = ?`;
+    values.push(userId);
+    const query = `UPDATE users SET ${fields.join(', ')} WHERE id = ?`;
 
-    await this.db.execute(query, [...values, userId]);
-
-    // Return updated user
-    return await this.getUserById(userId);
+    await this.execute(query, values);
+    return true;
   }
 
-  async deleteUser(userId) {
-    const query = `DELETE FROM users WHERE id = ?`;
-    const [result] = await this.db.execute(query, [userId]);
-
-    return result.affectedRows > 0;
-  }
-
-  async getAllUsers() {
-    const query = `SELECT * FROM users ORDER BY created_at DESC`;
-    const [rows] = await this.db.execute(query);
-
-    return rows;
-  }
-
-  // Additional useful methods for your project
-  async getUsersByRole(role) {
-    const query = `SELECT * FROM users WHERE role = ?`;
-    const [rows] = await this.db.execute(query, [role]);
-
-    return rows;
-  }
-
-  async getVerifiedUsers() {
-    const query = `SELECT * FROM users WHERE is_verified = true`;
-    const [rows] = await this.db.execute(query);
-
-    return rows;
-  }
-
-  async getUsersCount() {
-    const query = `SELECT COUNT(*) as count FROM users`;
-    const [rows] = await this.db.execute(query);
-
-    return rows[0].count;
-  }
-
-  // OTP-related methods
-  async getUserByOTP(otpCode) {
+  // Get all users (admin only)
+  async findAll(limit = 10, offset = 0) {
     const query = `
-      SELECT * FROM users 
-      WHERE otp_code = ? AND otp_expires_at > NOW()
+      SELECT id, name, email, role, is_verified, created_at, updated_at
+      FROM users 
+      ORDER BY created_at DESC 
+      LIMIT ? OFFSET ?
     `;
-    const [rows] = await this.db.execute(query, [otpCode]);
 
-    return rows.length > 0 ? rows[0] : null;
+    return await this.execute(query, [limit, offset]);
   }
 
-  async clearUserOTP(userId) {
-    const query = `
-      UPDATE users 
-      SET otp_code = NULL, otp_expires_at = NULL, otp_type = NULL 
-      WHERE id = ?
-    `;
-    await this.db.execute(query, [userId]);
+  // Delete user
+  async delete(userId) {
+    const query = 'DELETE FROM users WHERE id = ?';
+    await this.execute(query, [userId]);
+    return true;
   }
 }
 
-// Create and export a single instance
-const userRepository = new UserRepository();
-module.exports = { userRepository };
+module.exports = new UserRepository();

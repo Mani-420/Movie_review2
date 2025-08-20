@@ -9,8 +9,33 @@ const ReviewValidator = require('../validators/reviewValidator.js');
 
 const router = express.Router();
 
-// Public movie routes
+// 👑 ADMIN ROUTES - Movie Management
+router.post(
+  '/',
+  authMiddleware,
+  roleMiddleware(['admin']),
+  validate(MovieValidator.create),
+  movieController.createMovie
+);
+
+router.put(
+  '/:id',
+  authMiddleware,
+  roleMiddleware(['admin']),
+  validate(MovieValidator.update),
+  movieController.updateMovie
+);
+
+router.delete(
+  '/:id',
+  authMiddleware,
+  roleMiddleware(['admin']),
+  movieController.deleteMovie
+);
+
+// 🌍 PUBLIC ROUTES - Movie Information
 router.get('/', validate(MovieValidator.getAll), movieController.getAllMovies);
+
 router.get(
   '/search',
   validate(MovieValidator.search),
@@ -42,24 +67,24 @@ router.get(
   movieController.getMovieById
 );
 
-// Movie reviews routes
+// 📊 MOVIE REVIEWS - Read Only (for movie-specific review data)
 router.get(
   '/:movieId/reviews',
   validate(ReviewValidator.getMovieReviews),
   reviewController.getMovieReviews
 );
+
 router.get(
   '/:movieId/rating-stats',
   validate(ReviewValidator.getMovieRatingStats),
   reviewController.getMovieRatingStats
 );
 
-// Protected routes - Create review for movie
 router.post(
   '/:movieId/reviews',
   authMiddleware,
   roleMiddleware(['user']),
-  validate(ReviewValidator.create),
+  validate(ReviewValidator.createMovieReview),
   reviewController.createReview
 );
 

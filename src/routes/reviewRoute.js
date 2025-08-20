@@ -7,29 +7,32 @@ const ReviewValidator = require('../validators/reviewValidator.js');
 
 const router = express.Router();
 
-// Public review routes
+// 🌍 PUBLIC ROUTES - General review browsing
 router.get(
   '/',
   validate(ReviewValidator.getAll),
   reviewController.getReviewsWithPagination
 );
+
 router.get(
   '/recent',
   validate(ReviewValidator.getRecent),
   reviewController.getRecentReviews
 );
+
 router.get(
   '/user/:userId',
   validate(ReviewValidator.getUserReviews),
   reviewController.getUserReviews
 );
+
 router.get(
   '/:id',
   validate(ReviewValidator.getById),
   reviewController.getReviewById
 );
 
-// Protected routes - User can manage their own reviews
+// 👤 PROTECTED ROUTES - User can manage their own reviews
 router.put(
   '/:id',
   authMiddleware,

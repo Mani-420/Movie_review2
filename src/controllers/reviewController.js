@@ -10,12 +10,27 @@ class ReviewController {
   createReview = asyncHandler(async (req, res) => {
     // req.params.movieId and req.body are already validated by Zod
     const { movieId } = req.params;
-    const userId = req.user.userId; // From auth middleware
+    const { rating, reviewText } = req.body;
+    const userId = req.user?.id; // From auth middleware
+
+    if (!userId) {
+      throw new Error('User ID not found in token');
+    }
+
+    // Add this in createReview method temporarily
+    console.log('🔍 Full req.user object:', req.user);
+    console.log('🔍 Available fields:', Object.keys(req.user || {}));
+
+    // Call service with the correct signature (3 parameters)
+    const reviewData = {
+      rating,
+      comment: reviewText // ← Map reviewText to comment
+    };
 
     const result = await this.reviewService.createReview(
       userId,
-      movieId,
-      req.body
+      parseInt(movieId),
+      reviewData
     );
     res.status(201).json(result);
   });
@@ -24,7 +39,7 @@ class ReviewController {
   updateReview = asyncHandler(async (req, res) => {
     // req.params.id and req.body are already validated by Zod
     const { id } = req.params;
-    const userId = req.user.userId; // From auth middleware
+    const userId = req.user?.id; // From auth middleware
 
     const result = await this.reviewService.updateReview(userId, id, req.body);
     res.status(200).json(result);
@@ -34,7 +49,7 @@ class ReviewController {
   deleteReview = asyncHandler(async (req, res) => {
     // req.params.id is already validated by Zod
     const { id } = req.params;
-    const userId = req.user.userId; // From auth middleware
+    const userId = req.user?.id; // From auth middleware
 
     const result = await this.reviewService.deleteReview(userId, id);
     res.status(200).json(result);

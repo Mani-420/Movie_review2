@@ -61,7 +61,7 @@ class AuthController {
   // GET /auth/me - This will use auth middleware instead
   getMe = asyncHandler(async (req, res) => {
     // req.user will be set by auth middleware
-    const result = await this.authService.getMe(req.user.token);
+    const result = await this.authService.getMe(req.user.id);
     res.status(200).json(result);
   });
 }

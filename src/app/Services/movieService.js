@@ -17,7 +17,7 @@ class MovieService {
         cast,
         director,
         duration_minutes,
-        poster_url,
+        poster_url
       } = movieData;
 
       // Basic validation
@@ -34,13 +34,13 @@ class MovieService {
         cast,
         director,
         duration_minutes,
-        poster_url,
+        poster_url
       });
 
       return {
         success: true,
         message: 'Movie created successfully',
-        movie: newMovie,
+        movie: newMovie
       };
     } catch (error) {
       throw new Error('Error creating movie: ' + error.message);
@@ -57,7 +57,7 @@ class MovieService {
 
       return {
         success: true,
-        movie,
+        movie
       };
     } catch (error) {
       throw new Error('Error fetching movie: ' + error.message);
@@ -82,7 +82,7 @@ class MovieService {
       return {
         success: true,
         message: 'Movie updated successfully',
-        movie: updatedMovie,
+        movie: updatedMovie
       };
     } catch (error) {
       throw new Error('Error updating movie: ' + error.message);
@@ -105,7 +105,7 @@ class MovieService {
 
       return {
         success: true,
-        message: 'Movie deleted successfully',
+        message: 'Movie deleted successfully'
       };
     } catch (error) {
       throw new Error('Error deleting movie: ' + error.message);
@@ -120,7 +120,7 @@ class MovieService {
       return {
         success: true,
         count: movies.length,
-        movies,
+        movies
       };
     } catch (error) {
       throw new Error('Error fetching movies: ' + error.message);
@@ -128,18 +128,22 @@ class MovieService {
   }
 
   // Get movies with pagination (public)
-  async getMoviesWithPagination(page = 1, limit = 10, filters = {}) {
+  async getMoviesWithPagination(page, limit, filters) {
     try {
+      // Ensure proper type conversion before passing to repository
+      const pageNum = parseInt(page) || 1;
+      const limitNum = parseInt(limit) || 10;
+
       const result = await movieRepository.getMoviesWithPagination(
-        page,
-        limit,
+        pageNum,
+        limitNum,
         filters
       );
 
       return {
         success: true,
-        data: result.movies,
-        pagination: result.pagination,
+        message: 'Movies retrieved successfully',
+        data: result
       };
     } catch (error) {
       throw new Error(
@@ -161,7 +165,7 @@ class MovieService {
         success: true,
         searchTerm,
         count: movies.length,
-        movies,
+        movies
       };
     } catch (error) {
       throw new Error('Error searching movies: ' + error.message);
@@ -181,7 +185,7 @@ class MovieService {
         success: true,
         genre,
         count: movies.length,
-        movies,
+        movies
       };
     } catch (error) {
       throw new Error('Error fetching movies by genre: ' + error.message);
@@ -201,7 +205,7 @@ class MovieService {
         success: true,
         year,
         count: movies.length,
-        movies,
+        movies
       };
     } catch (error) {
       throw new Error('Error fetching movies by year: ' + error.message);
@@ -217,7 +221,7 @@ class MovieService {
         success: true,
         limit: parseInt(limit),
         count: movies.length,
-        movies,
+        movies
       };
     } catch (error) {
       throw new Error('Error fetching top rated movies: ' + error.message);
@@ -233,7 +237,7 @@ class MovieService {
         success: true,
         limit: parseInt(limit),
         count: movies.length,
-        movies,
+        movies
       };
     } catch (error) {
       throw new Error('Error fetching recent movies: ' + error.message);
@@ -247,7 +251,7 @@ class MovieService {
 
       return {
         success: true,
-        totalMovies: count,
+        totalMovies: count
       };
     } catch (error) {
       throw new Error('Error fetching movies count: ' + error.message);
@@ -261,7 +265,7 @@ class MovieService {
 
       return {
         success: true,
-        message: 'Movie rating updated successfully',
+        message: 'Movie rating updated successfully'
       };
     } catch (error) {
       throw new Error('Error updating movie rating: ' + error.message);

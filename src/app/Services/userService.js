@@ -1,8 +1,8 @@
 // This will act as a User Authentication Service
-const { userRepository } = require('../repositories/userRepository.js');
+const { userRepository } = require('../Repositories/userRepository.js');
 const {
   hashPassword,
-  comparePassword,
+  comparePassword
 } = require('../../utils/passwordUtils.js');
 const { generateToken } = require('../../utils/tokenUtils.js');
 const asyncHandler = require('../../utils/asyncHandler.js');
@@ -31,13 +31,13 @@ class UserService {
         email,
         password_hash: hashedPassword, // ✅ Correct MySQL field name
         role,
-        is_verified: false, // ✅ Will be verified via OTP
+        is_verified: false // ✅ Will be verified via OTP
       });
 
       // Generate JWT Token with MySQL id
       const token = generateToken({
         userId: newUser.id, // ✅ MySQL uses 'id', not '_id'
-        role: newUser.role,
+        role: newUser.role
       });
 
       // Remove sensitive data
@@ -53,7 +53,7 @@ class UserService {
         success: true,
         message: 'User registered successfully. Please verify your account.',
         user: userWithoutSensitiveData,
-        token,
+        token
       };
     } catch (error) {
       throw new Error('Error registering user: ' + error.message);
@@ -87,7 +87,7 @@ class UserService {
       // Generate JWT Token
       const token = generateToken({
         userId: existingUser.id, // ✅ MySQL field name
-        role: existingUser.role,
+        role: existingUser.role
       });
 
       // Remove sensitive data from user object
@@ -103,7 +103,7 @@ class UserService {
         success: true,
         message: 'User logged in successfully',
         user: userWithoutSensitiveData,
-        token,
+        token
       };
     } catch (error) {
       throw new Error('Error logging in user: ' + error.message);
@@ -164,7 +164,7 @@ class UserService {
       }
       return {
         success: true,
-        message: 'User deleted successfully',
+        message: 'User deleted successfully'
       };
     } catch (error) {
       throw new Error('Error deleting user: ' + error.message);
@@ -206,13 +206,13 @@ class UserService {
       await userRepository.updateUser(user.id, {
         otp_code: otpCode,
         otp_expires_at: otpExpiresAt,
-        otp_type: type,
+        otp_type: type
       });
 
       return {
         success: true,
         message: 'OTP generated successfully',
-        otpCode, // You'll send this via email/SMS
+        otpCode // You'll send this via email/SMS
       };
     } catch (error) {
       throw new Error('Error generating OTP: ' + error.message);
@@ -241,12 +241,12 @@ class UserService {
         is_verified: true,
         otp_code: null,
         otp_expires_at: null,
-        otp_type: null,
+        otp_type: null
       });
 
       return {
         success: true,
-        message: 'Account verified successfully',
+        message: 'Account verified successfully'
       };
     } catch (error) {
       throw new Error('Error verifying OTP: ' + error.message);

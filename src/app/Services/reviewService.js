@@ -1,7 +1,7 @@
 // This will act as a Review Service for business logic
 const { reviewRepository } = require('../Repositories/reviewRepository.js');
 const { movieRepository } = require('../Repositories/movieRepository.js');
-const { userRepository } = require('../Repositories/userRepository.js');
+const userRepository = require('../Repositories/userRepository.js');
 
 class ReviewService {
   constructor() {
@@ -27,7 +27,7 @@ class ReviewService {
       }
 
       // Check if user exists
-      const user = await userRepository.getUserById(userId);
+      const user = await userRepository.findById(userId);
       if (!user) {
         throw new Error('User not found');
       }
@@ -46,16 +46,16 @@ class ReviewService {
         movie_id: movieId,
         user_id: userId,
         rating: parseInt(rating),
-        comment: comment || null,
+        comment: comment || null
       });
 
       // Update movie rating statistics
-      await this.updateMovieRating(movieId);
+      // await this.updateMovieRating(movieId);
 
       return {
         success: true,
         message: 'Review created successfully',
-        review: newReview,
+        review: newReview
       };
     } catch (error) {
       throw new Error('Error creating review: ' + error.message);
@@ -72,7 +72,7 @@ class ReviewService {
 
       return {
         success: true,
-        review,
+        review
       };
     } catch (error) {
       throw new Error('Error fetching review: ' + error.message);
@@ -119,7 +119,7 @@ class ReviewService {
       return {
         success: true,
         message: 'Review updated successfully',
-        review: updatedReview,
+        review: updatedReview
       };
     } catch (error) {
       throw new Error('Error updating review: ' + error.message);
@@ -147,11 +147,11 @@ class ReviewService {
       }
 
       // Update movie rating statistics
-      await this.updateMovieRating(existingReview.movie_id);
+      // await this.updateMovieRating(existingReview.movie_id);
 
       return {
         success: true,
-        message: 'Review deleted successfully',
+        message: 'Review deleted successfully'
       };
     } catch (error) {
       throw new Error('Error deleting review: ' + error.message);
@@ -174,7 +174,7 @@ class ReviewService {
         movieId,
         movieTitle: movie.title,
         count: reviews.length,
-        reviews,
+        reviews
       };
     } catch (error) {
       throw new Error('Error fetching movie reviews: ' + error.message);
@@ -185,7 +185,7 @@ class ReviewService {
   async getReviewsByUserId(userId) {
     try {
       // Check if user exists
-      const user = await userRepository.getUserById(userId);
+      const user = await userRepository.findById(userId);
       if (!user) {
         throw new Error('User not found');
       }
@@ -197,7 +197,7 @@ class ReviewService {
         userId,
         userName: user.name,
         count: reviews.length,
-        reviews,
+        reviews
       };
     } catch (error) {
       throw new Error('Error fetching user reviews: ' + error.message);
@@ -207,21 +207,34 @@ class ReviewService {
   // Get reviews with pagination (public)
   async getReviewsWithPagination(page = 1, limit = 10, filters = {}) {
     try {
-      const result = await reviewRepository.getReviewsWithPagination(
-        page,
-        limit,
-        filters
-      );
+      const query = `
+      SELECT 
+        r.id,
+        r.movie_id,
+        r.user_id,
+        r.rating,
+        r.comment as reviewText,
+        r.created_at,
+        u.name as userName,
+        m.title as movieTitle
+      FROM reviews r
+      LEFT JOIN users u ON r.user_id = u.id
+      LEFT JOIN movies m ON r.movie_id = m.id
+      ORDER BY r.created_at DESC
+    `;
+
+      // ✅ No parameters needed
+      const [reviews] = await reviewRepository.getAllReviews(query, []);
 
       return {
         success: true,
-        data: result.reviews,
-        pagination: result.pagination,
+        message: 'Reviews retrieved successfully',
+        data: {
+          reviews
+        }
       };
     } catch (error) {
-      throw new Error(
-        'Error fetching reviews with pagination: ' + error.message
-      );
+      throw new Error('Error fetching reviews: ' + error.message);
     }
   }
 
@@ -248,9 +261,9 @@ class ReviewService {
             2: stats.rating_2,
             3: stats.rating_3,
             4: stats.rating_4,
-            5: stats.rating_5,
-          },
-        },
+            5: stats.rating_5
+          }
+        }
       };
     } catch (error) {
       throw new Error(
@@ -283,7 +296,7 @@ class ReviewService {
       return {
         success: true,
         count: reviews.length,
-        reviews,
+        reviews
       };
     } catch (error) {
       throw new Error('Error fetching all reviews: ' + error.message);
@@ -297,7 +310,7 @@ class ReviewService {
 
       return {
         success: true,
-        totalReviews: count,
+        totalReviews: count
       };
     } catch (error) {
       throw new Error('Error fetching reviews count: ' + error.message);
@@ -323,7 +336,7 @@ class ReviewService {
         success: true,
         canReview: !existingReview,
         hasExistingReview: !!existingReview,
-        existingReview: existingReview || null,
+        existingReview: existingReview || null
       };
     } catch (error) {
       throw new Error('Error checking review eligibility: ' + error.message);
@@ -331,32 +344,32 @@ class ReviewService {
   }
 
   // Internal method to update movie rating after review changes
-  async updateMovieRating(movieId) {
-    try {
-      const stats = await reviewRepository.getMovieRatingStats(movieId);
+  // async updateMovieRating(movieId) {
+  //   try {
+  //     const stats = await reviewRepository.getMovieRatingStats(movieId);
 
-      const averageRating =
-        stats.total_reviews > 0
-          ? parseFloat(stats.average_rating).toFixed(2)
-          : 0;
+  //     const averageRating =
+  //       stats.total_reviews > 0
+  //         ? parseFloat(stats.average_rating).toFixed(2)
+  //         : 0;
 
-      const totalReviews = stats.total_reviews;
+  //     const totalReviews = stats.total_reviews;
 
-      // Update movie ratings
-      await movieRepository.updateMovieRating(
-        movieId,
-        averageRating,
-        totalReviews
-      );
+  //     // Update movie ratings
+  //     await movieRepository.updateMovieRating(
+  //       movieId,
+  //       averageRating,
+  //       totalReviews
+  //     );
 
-      return {
-        success: true,
-        message: 'Movie rating updated successfully',
-      };
-    } catch (error) {
-      throw new Error('Error updating movie rating: ' + error.message);
-    }
-  }
+  //     return {
+  //       success: true,
+  //       message: 'Movie rating updated successfully'
+  //     };
+  //   } catch (error) {
+  //     throw new Error('Error updating movie rating: ' + error.message);
+  //   }
+  // }
 
   // Delete all reviews for a movie (when movie is deleted - admin only)
   async deleteReviewsByMovieId(movieId) {
@@ -368,7 +381,7 @@ class ReviewService {
       return {
         success: true,
         message: `${deletedCount} reviews deleted successfully`,
-        deletedCount,
+        deletedCount
       };
     } catch (error) {
       throw new Error('Error deleting movie reviews: ' + error.message);
@@ -383,7 +396,7 @@ class ReviewService {
       return {
         success: true,
         message: `${deletedCount} reviews deleted successfully`,
-        deletedCount,
+        deletedCount
       };
     } catch (error) {
       throw new Error('Error deleting user reviews: ' + error.message);

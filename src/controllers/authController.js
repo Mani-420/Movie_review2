@@ -3,7 +3,7 @@ const asyncHandler = require('../utils/asyncHandler.js');
 
 class AuthController {
   constructor() {
-    this.authService = new AuthService();
+    this.authService = AuthService;
   }
 
   // POST /auth/signup - Clean, no validation needed!

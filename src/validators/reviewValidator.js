@@ -24,6 +24,29 @@ class ReviewValidator {
     })
   });
 
+  // Add this to your ReviewValidator class
+  static createMovieReview = z.object({
+    params: z.object({
+      movieId: z.string().transform((val) => {
+        const num = parseInt(val, 10);
+        if (isNaN(num)) throw new Error('Invalid movieId');
+        return num;
+      })
+    }),
+    body: z.object({
+      rating: z
+        .number()
+        .int()
+        .min(1, 'Rating must be at least 1')
+        .max(5, 'Rating must be at most 5'),
+      reviewText: z
+        .string()
+        .min(1, 'Review text is required')
+        .max(1000, 'Review text must be less than 1000 characters')
+        .trim()
+    })
+  });
+
   // PUT /reviews/:id (Update Review) - ADD THIS
   static update = z.object({
     params: z.object({

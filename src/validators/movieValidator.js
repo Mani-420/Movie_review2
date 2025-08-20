@@ -31,9 +31,10 @@ class MovieValidator {
         .trim(),
 
       cast: z
-        .string()
-        .max(500, 'Cast must be less than 500 characters')
-        .trim()
+        .union([
+          z.string(), // Accept string (comma-separated)
+          z.array(z.string()) // Accept array of strings
+        ])
         .optional(),
 
       director: z
@@ -51,7 +52,26 @@ class MovieValidator {
     })
   });
 
-  // ADD ALL THE MISSING METHODS YOUR ROUTES NEED:
+  // Check your movieValidator.js - update schema
+  static update = z.object({
+    body: z
+      .object({
+        title: z.string().min(1).max(255).trim().optional(),
+        description: z.string().max(1000).trim().optional(),
+        release_date: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional(),
+        genre: z.string().min(1).max(100).trim().optional(),
+        director: z.string().max(255).trim().optional(),
+        cast: z
+          .union([z.string().max(1000), z.array(z.string()).max(50)])
+          .optional(),
+        duration_minutes: z.number().int().min(1).max(1000).optional(),
+        poster_url: z.string().url().optional()
+      })
+      .strict() // ← This might be causing issues
+  });
 
   // GET /movies
   static getAll = z.object({

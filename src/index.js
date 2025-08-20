@@ -13,7 +13,7 @@ const adminRoutes = require('./routes/adminRoute.js');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler.js');
-const { connectDB } = require('./config/database.js');
+const { connectDB } = require('./database/connection.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,6 +35,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // Database connection
 connectDB();
+
+// Test email service
+const emailService = require('./app/Services/emailService.js');
+emailService.testConnection();
 
 // API Routes
 app.use('/api/auth', authRoutes);

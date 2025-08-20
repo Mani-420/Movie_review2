@@ -9,7 +9,7 @@ const dbConfig = {
   database: process.env.DB_NAME || 'movie_review_db',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0,
+  queueLimit: 0
 };
 
 // Create connection pool
@@ -35,7 +35,7 @@ const createDatabase = async () => {
       host: dbConfig.host,
       port: dbConfig.port,
       user: dbConfig.user,
-      password: dbConfig.password,
+      password: dbConfig.password
     });
 
     await connectionWithoutDB.execute(
@@ -50,9 +50,31 @@ const createDatabase = async () => {
   }
 };
 
+const connectDB = async () => {
+  try {
+    // Create database if it doesn't exist
+    await createDatabase();
+
+    // Test the connection
+    const isConnected = await testConnection();
+
+    if (!isConnected) {
+      throw new Error('Failed to connect to database');
+    }
+
+    return pool;
+  } catch (error) {
+    console.error('💥 Database initialization failed:', error.message);
+    console.error('🔧 Please check your database configuration in .env file');
+    // Don't exit process, let the app continue (for development)
+    // process.exit(1);
+  }
+};
+
 module.exports = {
   pool,
   testConnection,
   createDatabase,
   dbConfig,
+  connectDB
 };

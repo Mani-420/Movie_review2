@@ -1,9 +1,9 @@
 // This will act as a Review Repository for MySQL
-const db = require('../../database/connection.js');
+const { pool } = require('../../database/connection.js');
 
 class ReviewRepository {
   constructor() {
-    this.db = db;
+    this.db = pool;
   }
 
   async createReview(reviewData) {
@@ -18,7 +18,7 @@ class ReviewRepository {
       movie_id,
       user_id,
       rating,
-      comment,
+      comment
     ]);
 
     // Return the created review
@@ -76,6 +76,25 @@ class ReviewRepository {
     const [rows] = await this.db.execute(query, [movieId]);
 
     return rows;
+  }
+
+  // Add this method to your ReviewRepository class:
+
+  async getReviewByUserAndMovie(userId, movieId) {
+    try {
+      const query = `
+      SELECT * FROM reviews 
+      WHERE user_id = ? AND movie_id = ? 
+      LIMIT 1
+    `;
+
+      const [rows] = await this.db.execute(query, [userId, movieId]);
+      return rows[0] || null;
+    } catch (error) {
+      throw new Error(
+        'Database error in getReviewByUserAndMovie: ' + error.message
+      );
+    }
   }
 
   // Get reviews by a specific user
@@ -158,8 +177,8 @@ class ReviewRepository {
         total,
         totalPages: Math.ceil(total / limit),
         hasNext: page * limit < total,
-        hasPrev: page > 1,
-      },
+        hasPrev: page > 1
+      }
     };
   }
 
@@ -181,7 +200,6 @@ class ReviewRepository {
 
     return rows[0];
   }
-
 
   // Get recent reviews (for homepage/dashboard)
   async getRecentReviews(limit = 10) {

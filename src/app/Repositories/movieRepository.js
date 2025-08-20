@@ -1,44 +1,52 @@
 // This will act as a Movie Repository for MySQL
-const db = require('../../database/connection.js');
+const { pool } = require('../../database/connection.js');
 
 class MovieRepository {
   constructor() {
-    this.db = db;
+    this.db = pool;
   }
 
   async createMovie(movieData) {
-    const {
-      title,
-      description,
-      release_date,
-      genre,
-      cast,
-      director,
-      duration_minutes,
-      poster_url,
-    } = movieData;
+    try {
+      const {
+        title,
+        description,
+        release_date,
+        genre,
+        cast,
+        director,
+        duration_minutes,
+        poster_url
+      } = movieData;
 
-    const query = `
+      // Convert array to string if needed
+      const castString = Array.isArray(cast) ? cast.join(', ') : cast;
+
+      const query = `
       INSERT INTO movies (
-        title, description, release_date, genre, cast, 
-        director, duration_minutes, poster_url
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        title, description, release_date, genre, director, 
+        cast, duration_minutes, poster_url, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `;
 
-    const [result] = await this.db.execute(query, [
-      title,
-      description,
-      release_date,
-      genre,
-      cast,
-      director,
-      duration_minutes,
-      poster_url,
-    ]);
+      // ✅ Convert undefined to null explicitly
+      const values = [
+        title,
+        description || null, // ✅ Convert undefined to null
+        release_date || null, // ✅ Convert undefined to null
+        genre,
+        director || null, // ✅ Convert undefined to null
+        castString || null, // ✅ Convert undefined to null
+        duration_minutes || null, // ✅ Convert undefined to null
+        poster_url || null // ✅ Convert undefined to null
+      ];
 
-    // Return the created movie
-    return await this.getMovieById(result.insertId);
+      const [result] = await this.db.execute(query, values);
+
+      return await this.getMovieById(result.insertId);
+    } catch (error) {
+      throw new Error('Database error in createMovie: ' + error.message);
+    }
   }
 
   async getMovieById(movieId) {
@@ -137,31 +145,31 @@ class MovieRepository {
       searchPattern,
       searchPattern,
       searchPattern,
-      searchPattern,
+      searchPattern
     ]);
     return rows;
   }
 
-  // async getTopRatedMovies(limit = 10) {
-  //   const query = `
-  //     SELECT * FROM movies
-  //     WHERE ratings_count > 0
-  //     ORDER BY ratings_avg DESC, ratings_count DESC
-  //     LIMIT ?
-  //   `;
-  //   const [rows] = await this.db.execute(query, [limit]);
-  //   return rows;
-  // }
+  async getTopRatedMovies(limit = 10) {
+    const query = `
+      SELECT * FROM movies
+      WHERE ratings_count > 0
+      ORDER BY ratings_avg DESC, ratings_count DESC
+      LIMIT ?
+    `;
+    const [rows] = await this.db.execute(query, [limit]);
+    return rows;
+  }
 
-  // async getRecentMovies(limit = 10) {
-  //   const query = `
-  //     SELECT * FROM movies
-  //     ORDER BY created_at DESC
-  //     LIMIT ?
-  //   `;
-  //   const [rows] = await this.db.execute(query, [limit]);
-  //   return rows;
-  // }
+  async getRecentMovies(limit = 10) {
+    const query = `
+      SELECT * FROM movies
+      ORDER BY created_at DESC
+      LIMIT ?
+    `;
+    const [rows] = await this.db.execute(query, [limit]);
+    return rows;
+  }
 
   async getMoviesCount() {
     const query = `SELECT COUNT(*) as count FROM movies`;
@@ -181,54 +189,25 @@ class MovieRepository {
   // Get movies with pagination and total count
 
   async getMoviesWithPagination(page = 1, limit = 10, filters = {}) {
-    const offset = (page - 1) * limit;
+    try {
+      // Just return all movies for now (no pagination)
+      const query = 'SELECT * FROM movies ORDER BY created_at DESC';
+      const [movies] = await this.db.execute(query);
 
-    // Get movies with filters and pagination
-    const movies = await this.getAllMovies({
-      ...filters,
-      limit,
-      offset,
-    });
-
-    // Get total count for pagination info
-    let countQuery = `SELECT COUNT(*) as total FROM movies`;
-    const countParams = [];
-    const whereConditions = [];
-
-    // Apply same filters for count
-    if (filters.genre) {
-      whereConditions.push(`genre = ?`);
-      countParams.push(filters.genre);
+      return {
+        movies,
+        pagination: {
+          page: 1,
+          limit: movies.length,
+          total: movies.length,
+          totalPages: 1
+        }
+      };
+    } catch (error) {
+      throw new Error(
+        'Database error in getMoviesWithPagination: ' + error.message
+      );
     }
-
-    if (filters.search) {
-      whereConditions.push(`(title LIKE ? OR description LIKE ?)`);
-      countParams.push(`%${filters.search}%`, `%${filters.search}%`);
-    }
-
-    if (filters.releaseYear) {
-      whereConditions.push(`YEAR(release_date) = ?`);
-      countParams.push(filters.releaseYear);
-    }
-
-    if (whereConditions.length > 0) {
-      countQuery += ` WHERE ${whereConditions.join(' AND ')}`;
-    }
-
-    const [countResult] = await this.db.execute(countQuery, countParams);
-    const total = countResult[0].total;
-
-    return {
-      movies,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page * limit < total,
-        hasPrev: page > 1,
-      },
-    };
   }
 }
 

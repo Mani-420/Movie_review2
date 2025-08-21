@@ -250,8 +250,6 @@ class AuthService {
     }
   }
 
-  // Add this method to your AuthService class
-
   async resendOTP(email) {
     try {
       // Find user by email
@@ -289,5 +287,4 @@ class AuthService {
   }
 }
 
-// ✅ EXPORT INSTANCE, NOT CLASS
 module.exports = new AuthService();

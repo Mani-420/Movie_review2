@@ -112,9 +112,9 @@ class ReviewService {
       );
 
       // Update movie rating if rating changed
-      if (rating && rating !== existingReview.rating) {
-        await this.updateMovieRating(existingReview.movie_id);
-      }
+      // if (rating && rating !== existingReview.rating) {
+      //   await this.updateMovieRating(existingReview.movie_id);
+      // }
 
       return {
         success: true,

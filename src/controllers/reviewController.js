@@ -96,14 +96,8 @@ class ReviewController {
   });
 
   // GET /reviews (with pagination and filters)
-  getReviewsWithPagination = asyncHandler(async (req, res) => {
-    // req.query is already validated and transformed by Zod
-    const { page, limit, ...filters } = req.query;
-    const result = await this.reviewService.getReviewsWithPagination(
-      page,
-      limit,
-      filters
-    );
+  getAllReviews = asyncHandler(async (req, res) => {
+    const result = await this.reviewService.getAllReviews();
     res.status(200).json(result);
   });
 }

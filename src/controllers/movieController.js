@@ -7,24 +7,24 @@ class MovieController {
   }
 
   // Create Movies
-  createMovie = asyncHandler(async (req, res) => {
-    const result = await this.movieService.createMovie(req.body);
-    res.status(201).json(result);
-  });
+  // createMovie = asyncHandler(async (req, res) => {
+  //   const result = await this.movieService.createMovie(req.body);
+  //   res.status(201).json(result);
+  // });
 
   // Update Movie
-  updateMovie = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const result = await this.movieService.updateMovie(id, req.body);
-    res.status(200).json(result);
-  });
+  // updateMovie = asyncHandler(async (req, res) => {
+  //   const { id } = req.params;
+  //   const result = await this.movieService.updateMovie(id, req.body);
+  //   res.status(200).json(result);
+  // });
 
   // Delete Movie
-  deleteMovie = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const result = await this.movieService.deleteMovie(id);
-    res.status(200).json(result);
-  });
+  // deleteMovie = asyncHandler(async (req, res) => {
+  //   const { id } = req.params;
+  //   const result = await this.movieService.deleteMovie(id);
+  //   res.status(200).json(result);
+  // });
 
   // GET /movies
   getAllMovies = asyncHandler(async (req, res) => {

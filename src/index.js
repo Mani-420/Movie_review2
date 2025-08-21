@@ -62,8 +62,6 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.json({
     message: 'Welcome to Movie Review Platform API',
-    version: '1.0.0',
-    documentation: '/api/docs',
     health: '/health'
   });
 });

@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const notFound = require('./utils/notFound.js');
 
 // Import routes
 const authRoutes = require('./routes/authRoute.js');
@@ -41,11 +42,11 @@ const emailService = require('./app/Services/emailService.js');
 emailService.testConnection();
 
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/movies', movieRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/movies', movieRoutes);
+app.use('/api/v1/reviews', reviewRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -67,16 +68,19 @@ app.get('/', (req, res) => {
   });
 });
 
-// Error handling middleware (must be last)
-app.use(errorHandler);
-
 // 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
+app.use(notFound);
+
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  res.status(statusCode).json({
     success: false,
-    message: `Route ${req.originalUrl} not found`
+    message: err.message || 'Internal Server Error'
   });
 });
+
+// Error handling middleware
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);

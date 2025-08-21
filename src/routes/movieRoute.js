@@ -6,6 +6,7 @@ const roleMiddleware = require('../middleware/roleMiddleware.js');
 const validate = require('../middleware/validationMiddleware.js');
 const MovieValidator = require('../validators/movieValidator.js');
 const ReviewValidator = require('../validators/reviewValidator.js');
+const adminController = require('../controllers/adminController.js');
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ router.post(
   authMiddleware,
   roleMiddleware(['admin']),
   validate(MovieValidator.create),
-  movieController.createMovie
+  adminController.createMovie
 );
 
 router.put(
@@ -23,14 +24,14 @@ router.put(
   authMiddleware,
   roleMiddleware(['admin']),
   validate(MovieValidator.update),
-  movieController.updateMovie
+  adminController.updateMovie
 );
 
 router.delete(
   '/:id',
   authMiddleware,
   roleMiddleware(['admin']),
-  movieController.deleteMovie
+  adminController.deleteMovie
 );
 
 // 🌍 PUBLIC ROUTES - Movie Information

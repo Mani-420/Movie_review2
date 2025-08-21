@@ -11,7 +11,7 @@ const router = express.Router();
 router.get(
   '/',
   validate(ReviewValidator.getAll),
-  reviewController.getReviewsWithPagination
+  reviewController.getAllReviews
 );
 
 router.get(

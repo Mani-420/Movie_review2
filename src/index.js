@@ -67,7 +67,7 @@ app.get('/', (req, res) => {
 });
 
 // 404 handler
-app.use(notFound);
+app.use('*', notFound);
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;

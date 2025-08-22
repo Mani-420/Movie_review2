@@ -21,7 +21,13 @@ const PORT = process.env.PORT || 3000;
 
 // Security middleware
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  })
+);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -67,7 +73,7 @@ app.get('/', (req, res) => {
 });
 
 // 404 handler
-app.use('*', notFound);
+app.use(notFound);
 
 // app.use((err, req, res, next) => {
 //   const statusCode = err.statusCode || 500;
